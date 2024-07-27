@@ -5,7 +5,7 @@ from sklearn.model_selection import train_test_split
 import time
 import socket
 
-
+# Generating Synthetic Dataset
 np.random.seed(42)
 num_samples = 1000
 data = {
@@ -27,7 +27,7 @@ df = pd.DataFrame(data)
 df.to_csv('synthetic_sensor_data.csv', index=False)
 print("Synthetic dataset created and saved to 'synthetic_sensor_data.csv'")
 
-
+# Pre-launch Checks with Machine Learning
 data = pd.read_csv('synthetic_sensor_data.csv')
 X = data.drop('failure', axis=1)
 y = data['failure']
@@ -37,7 +37,7 @@ model.fit(X_train, y_train)
 accuracy = model.score(X_test, y_test)
 print(f"Model accuracy: {accuracy * 100:.2f}%")
 
-
+# Fueling Process with PID Control
 class PIDController:
     def __init__(self, kp, ki, kd):
         self.kp = kp
@@ -59,19 +59,20 @@ measurement = 80
 control_signal = pid.update(setpoint, measurement)
 print(f"Control signal: {control_signal}")
 
-
+# Rocket Positioning with RocketPy
 from rocketpy import Environment
 
 Env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
-Env.set_date((2024, 7, 27, 6))  
+Env.set_date((2024, 7, 27, 6))  # Set the date to a valid time within the GFS file range
 Env.set_atmospheric_model(type='Forecast', file='GFS')
 Env.info()
 
-wind_speed = Env.wind.speed
-wind_direction = Env.wind.direction
+# Access wind speed and direction
+wind_speed = Env.get_wind(0)['speed']
+wind_direction = Env.get_wind(0)['direction']
 print(f"Wind speed: {wind_speed} m/s, Wind direction: {wind_direction} degrees")
 
-
+# Launch Sequencing
 class LaunchSequencer:
     def __init__(self):
         self.countdown = 10
@@ -85,7 +86,7 @@ class LaunchSequencer:
 
 sequencer = LaunchSequencer()
 
-
+# Communication with Ground Control
 def send_telemetry(data):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('ground_control_ip', 12345))
@@ -95,7 +96,7 @@ def send_telemetry(data):
 telemetry_data = "altitude=1000;speed=5400"
 send_telemetry(telemetry_data)
 
-
+# Integration and Overall System Design
 class RocketController:
     def __init__(self):
         self.pre_launch_checks_done = False
@@ -103,15 +104,15 @@ class RocketController:
         self.positioning_done = False
 
     def run_pre_launch_checks(self):
-        
+        # Run pre-launch checks
         self.pre_launch_checks_done = True
 
     def start_fueling(self):
-        
+        # Start fueling process
         self.fueling_done = True
 
     def position_rocket(self):
-        
+        # Position rocket
         self.positioning_done = True
 
     def launch(self):
