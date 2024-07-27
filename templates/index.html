@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch Simulation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            overflow: hidden; /* Prevent scrollbar during animation */
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            padding: 20px;
+            position: relative;
+            height: 500px; /* Adjust height as needed */
+        }
+        h1 {
+            color: #0056b3;
+        }
+        .rocket {
+            width: 100px;
+            height: 200px;
+            position: absolute;
+            bottom: 0; /* Start at the bottom of the container */
+            left: 50%;
+            transform: translateX(-50%);
+            transition: transform 2s ease-in-out; /* Smooth movement */
+        }
+        .rocket-body {
+            width: 100px;
+            height: 180px;
+            background: linear-gradient(to bottom, #ff0000, #ff8c00);
+            border-radius: 50px 50px 10px 10px;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .rocket-fin {
+            width: 30px;
+            height: 30px;
+            background: #ff0000;
+            position: absolute;
+            bottom: -15px;
+            border-radius: 5px;
+            transform: rotate(45deg);
+        }
+        .rocket-fin.left {
+            left: -15px;
+        }
+        .rocket-fin.right {
+            right: -15px;
+        }
+        .rocket-nose {
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 50px solid #ff0000;
+            position: absolute;
+            top: -50px;
+            left: 0;
+        }
+        .rocket-flame {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ff4500;
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        #status {
+            font-size: 18px;
+            margin-top: 20px;
+        }
+        .info {
+            background-color: #e7f0ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .move-up {
+            animation: moveUp 5s linear forwards; /* Animation for moving up */
+        }
+        @keyframes moveUp {
+            from {
+                transform: translateY(0); /* Start at the bottom */
+            }
+            to {
+                transform: translateY(-100vh); /* Move to the top of the viewport */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Rocket Launch Simulation</h1>
+        <div class="rocket" id="rocket">
+            <div class="rocket-nose"></div>
+            <div class="rocket-body"></div>
+            <div class="rocket-fin left"></div>
+            <div class="rocket-fin right"></div>
+            <div class="rocket-flame"></div>
+        </div>
+        <button class="button" onclick="startLaunch()">Start Launch</button>
+        <div id="status"></div>
+        <div class="info">
+            <p>Simulation Accuracy: <span id="accuracy">N/A</span></p>
+        </div>
+    </div>
+
+    <script>
+        function startLaunch() {
+            const inputData = {
+                temperature: 30,
+                pressure: 1010,
+                vibration: 0.6,
+                fuel_level: 20,
+                battery_voltage: 11.5
+            };
+
+            fetch('/launch', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(inputData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('status').innerText = data.status;
+                document.getElementById('accuracy').innerText = (data.accuracy * 100).toFixed(2) + "%";
+                document.getElementById('rocket').classList.add('move-up'); // Start the animation
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('status').innerText = 'An error occurred';
+            });
+        }
+    </script>
+</body>
+</html>
