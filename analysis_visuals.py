@@ -138,7 +138,7 @@ if st.button("Start Countdown"):
 st.header("Send Telemetry Data")
 telemetry_data = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
 if st.button("Send Telemetry"):
-    send_telemetry(telemetry_data)
+    send_telemetry(telemetry_data) 
 
 # Rocket Controller
 st.header("Rocket Controller")
