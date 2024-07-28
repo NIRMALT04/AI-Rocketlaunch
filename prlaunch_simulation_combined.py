@@ -149,21 +149,15 @@ if col1.button('Simulate'):
         col1.write(f"Delta V: {velocity[-1]:.2f} m/s")
         col1.write(f"Final Altitude: {altitude[-1]:.2f} m")
 
-        # Graphs and visualizations
-        col1.subheader('Rocket Velocity over Time')
-        col1.line_chart(velocity)
-
-        col1.subheader('Rocket Altitude over Time')
-        col1.line_chart(altitude)
-
-        # Rocket trajectory animation using Plotly
+        # 3D Rocket visualization using Plotly
         frames = [go.Frame(
             data=[
-                go.Scatter(
+                go.Scatter3d(
                     x=[t_val],
-                    y=[alt_val],
+                    y=[0],
+                    z=[alt_val],
                     mode='markers',
-                    marker=dict(size=20, symbol='triangle-up', color='blue')
+                    marker=dict(size=5, color='blue')
                 )
             ],
             name=f'frame{i}'
@@ -171,16 +165,20 @@ if col1.button('Simulate'):
 
         fig = go.Figure(
             data=[
-                go.Scatter(
+                go.Scatter3d(
                     x=[0],
                     y=[0],
+                    z=[0],
                     mode='markers',
-                    marker=dict(size=20, symbol='triangle-up', color='blue')
+                    marker=dict(size=5, color='blue')
                 )
             ],
             layout=go.Layout(
-                xaxis=dict(range=[0, burn_time * 2], title='Time (s)'),
-                yaxis=dict(range=[0, max(altitude) + 1000], title='Altitude (m)'),
+                scene=dict(
+                    xaxis=dict(title='Time (s)'),
+                    yaxis=dict(title=''),
+                    zaxis=dict(title='Altitude (m)')
+                ),
                 title='Rocket Launch Simulation',
                 updatemenus=[
                     {
@@ -199,3 +197,4 @@ if col1.button('Simulate'):
         )
 
         col1.plotly_chart(fig)
+
