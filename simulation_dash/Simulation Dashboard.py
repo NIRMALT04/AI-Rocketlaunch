@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.graph_objs as go
 import numpy as np
-from datetime import datetime
 
 # Constants
 g0 = 9.7911  
@@ -55,18 +54,27 @@ st.title("Rocket Launch Simulation Dashboard")
 # Rocket Trajectory Plot
 fig = go.Figure()
 
-for t in time:
-    fig.add_trace(go.Scatter(
-        x=[t],
-        y=[rocket_trajectory(t)],
-        mode='markers',
-        marker=dict(
-            size=10,
-            symbol='triangle-up',
-            color='blue'
-        ),
-        name=str(t)
-    ))
+# Add a scatter plot for the trajectory
+fig.add_trace(go.Scatter(
+    x=time,
+    y=altitude,
+    mode='lines',
+    line=dict(color='blue'),
+    name='Trajectory'
+))
+
+# Create animation frames
+frames = [go.Frame(
+    data=[go.Scatter(
+        x=time[:k],
+        y=rocket_trajectory(time[:k]),
+        mode='lines',
+        line=dict(color='blue')
+    )],
+    name=f'Frame {k}'
+) for k in range(1, len(time) + 1)]
+
+fig.frames = frames
 
 fig.update_layout(
     xaxis=dict(range=[0, 100], title='Time (s)'),
@@ -79,19 +87,7 @@ fig.update_layout(
             'method': 'animate',
             'args': [None, {'frame': {'duration': 50, 'redraw': True}, 'fromcurrent': True}]
         }]
-    }],
-    annotations=[
-        dict(
-            x=0.5,
-            y=0.95,
-            xref='paper',
-            yref='paper',
-            text=f'Temperature: {surface_temperature}<br>Pressure: {surface_pressure}<br>Fuel: 1000kg',
-            showarrow=False,
-            font=dict(size=14, color='black'),
-            align='center'
-        )
-    ]
+    }]
 )
 
 st.plotly_chart(fig)
