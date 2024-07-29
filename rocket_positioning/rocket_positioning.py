@@ -1,6 +1,7 @@
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 # Function to generate synthetic environmental data
 def generate_synthetic_data(steps, wind_speed_range, wind_direction_range):
