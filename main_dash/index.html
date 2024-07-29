@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rocket Launch Control System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1>🚀 Rocket Launch Control System</h1>
+        <nav>
+            <ul>
+                <li><a href="#home">Home</a></li>
+                <li><a href="#pid">PID Controller</a></li>
+                <li><a href="#model">Model Training</a></li>
+                <li><a href="#telemetry">Send Telemetry</a></li>
+                <li><a href="#environment">Rocket Environment</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="home">
+            <h2>Welcome to the Rocket Launch Control System</h2>
+            <p>This application helps you control and monitor rocket launches with ease.</p>
+        </section>
+        <section id="pid">
+            <h2>PID Controller</h2>
+            <label for="kp">Kp:</label>
+            <input type="number" id="kp" name="kp" step="0.1">
+            <label for="ki">Ki:</label>
+            <input type="number" id="ki" name="ki" step="0.1">
+            <label for="kd">Kd:</label>
+            <input type="number" id="kd" name="kd" step="0.1">
+            <button id="pidButton">Calculate Control Signal</button>
+            <p id="controlSignal"></p>
+        </section>
+        <section id="model">
+            <h2>Model Training</h2>
+            <button id="trainModelButton">Train Model</button>
+            <p id="modelAccuracy"></p>
+        </section>
+        <section id="telemetry">
+            <h2>Send Telemetry Data</h2>
+            <label for="telemetryData">Telemetry Data:</label>
+            <input type="text" id="telemetryData" name="telemetryData">
+            <button id="sendTelemetryButton">Send Telemetry</button>
+            <p id="telemetryStatus"></p>
+        </section>
+        <section id="environment">
+            <h2>Rocket Environment</h2>
+            <button id="getEnvironmentButton">Get Environment Data</button>
+            <p id="environmentData"></p>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 Rocket Control. All rights reserved.</p>
+    </footer>
+    <script src="scripts.js"></script>
+</body>
+</html>

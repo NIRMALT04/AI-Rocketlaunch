@@ -53,41 +53,27 @@ def safety_protocols(fuel_level, max_capacity, min_capacity=0):
         return "Fuel level within safe range. Proceed."
 
 # Simulated Data for Demonstration
-fuel_data = pd.DataFrame({
-    'mission_duration': np.random.uniform(1, 10, 100),
-    'payload_mass': np.random.uniform(500, 2000, 100),
-    'destination_distance': np.random.uniform(100, 1000, 100)
-})
-fuel_labels = np.random.uniform(1000, 5000, 100)
-sensor_data = pd.DataFrame({
-    'temperature': np.random.uniform(-50, 50, 100),
-    'pressure': np.random.uniform(0.5, 1.5, 100),
-    'vibration': np.random.uniform(0, 5, 100),
-    'humidity': np.random.uniform(0, 100, 100)
-})
+def generate_simulated_data():
+    fuel_data = pd.DataFrame({
+        'mission_duration': np.random.uniform(1, 10, 100),
+        'payload_mass': np.random.uniform(500, 2000, 100),
+        'destination_distance': np.random.uniform(100, 1000, 100)
+    })
+    fuel_labels = np.random.uniform(1000, 5000, 100)
+    sensor_data = pd.DataFrame({
+        'temperature': np.random.uniform(-50, 50, 100),
+        'pressure': np.random.uniform(0.5, 1.5, 100),
+        'vibration': np.random.uniform(0, 5, 100),
+        'humidity': np.random.uniform(0, 100, 100)
+    })
+    return fuel_data, fuel_labels, sensor_data
+
 example_fuel_data = pd.DataFrame({
     'mission_duration': [5],
     'payload_mass': [1200],
     'destination_distance': [500]
 })
 max_fuel_capacity = 4000
-
-# Preprocess Data
-fuel_data = preprocess_data(fuel_data)
-
-# Pre-launch Checks
-system_status = check_systems(sensor_data)
-analyzed_sensor_data = analyze_sensor_data(sensor_data)
-
-# Train Models for Fuel Calculations
-models = train_fuel_models(fuel_data, fuel_labels)
-
-# Predict Fuel Requirement
-lin_reg_pred, rf_reg_pred, svr_reg_pred, predicted_fuel = predict_fuel_requirement(models, example_fuel_data)
-
-# Safety Protocols Check
-current_fuel_level = predicted_fuel[0]
-safety_status = safety_protocols(current_fuel_level, max_fuel_capacity)
 
 # Full Pipeline for Autonomous Launch Preparation Process
 def autonomous_launch_preparation(fuel_data, fuel_labels, sensor_data, example_fuel_data, max_fuel_capacity):
@@ -100,12 +86,26 @@ def autonomous_launch_preparation(fuel_data, fuel_labels, sensor_data, example_f
     safety_status = safety_protocols(current_fuel_level, max_fuel_capacity)
     return system_status, analyzed_sensor_data, lin_reg_pred, rf_reg_pred, svr_reg_pred, predicted_fuel, safety_status
 
+# Streamlit Visualization
+st.title('Autonomous Launch Preparation System')
+
+if 'update' not in st.session_state:
+    st.session_state.update = False
+
+def update_data():
+    st.session_state.update = not st.session_state.update
+
+st.button('Update Data', on_click=update_data)
+
+# Generate new simulated data if update button is clicked
+if st.session_state.update:
+    fuel_data, fuel_labels, sensor_data = generate_simulated_data()
+else:
+    fuel_data, fuel_labels, sensor_data = generate_simulated_data()  # Initially generate data
+
 # Running the Autonomous Launch Preparation Process
 system_status, analyzed_sensor_data, lin_reg_pred, rf_reg_pred, svr_reg_pred, predicted_fuel, safety_status = autonomous_launch_preparation(
     fuel_data, fuel_labels, sensor_data, example_fuel_data, max_fuel_capacity)
-
-# Streamlit Visualization
-st.title('Autonomous Launch Preparation System')
 
 # Sensor Data Visualization
 st.subheader('Analyzed Sensor Data')

@@ -7,7 +7,6 @@ import time
 import socket
 from rocketpy import Environment
 import subprocess
-import os
 
 # Define your classes here
 
@@ -35,7 +34,7 @@ class LaunchSequencer:
             st.write(f"T-minus {self.countdown} seconds")
             time.sleep(1)
             self.countdown -= 1
-        st.write("Launch!")
+        st.success("Launch!")
 
 class RocketController:
     def __init__(self):
@@ -55,13 +54,13 @@ class RocketController:
         self._execute_streamlit_file('rocket_positioning/Rocket_positioning.py')
         self.positioning_done = True
 
-    def launch(self):
-        if self.pre_launch_checks_done and self.fueling_done and self.positioning_done:
-            self._execute_streamlit_file('simulation_dash/Simulation Dashboard.py')
-            sequencer = LaunchSequencer()
-            sequencer.start_countdown()
-        else:
-            st.write("Cannot launch, not all systems are ready. Please complete all the steps.")
+    def launch_trajectory(self):
+        self._execute_streamlit_file('simulation_dash/Simulation Dashboard.py')
+        sequencer = LaunchSequencer()
+        sequencer.start_countdown()
+
+    def launch_simulation(self):
+        self._execute_streamlit_file('3D_simulation.py')  # Adjust file name as needed
 
     def _execute_streamlit_file(self, file_name):
         try:
@@ -94,94 +93,173 @@ def train_model(X_train, y_train, X_test, y_test):
 
 # Send telemetry data
 def send_telemetry(data):
+    ground_control_ip = '127.0.0.1'
+    ground_control_port = 12345
+
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('ground_control_ip', 12345))  # Ensure 'ground_control_ip' is replaced with the actual IP
+        s.settimeout(10)
+        s.connect((ground_control_ip, ground_control_port))
         s.sendall(data.encode())
         s.close()
-        st.write("Telemetry data sent!")
+        st.success("Telemetry data sent!")
+    except ConnectionRefusedError:
+        st.error("Connection refused by the target machine. Ensure the service is running and listening on the port.")
+    except socket.timeout:
+        st.error("Connection timed out. The target machine may not be responding.")
+    except socket.gaierror as e:
+        st.error(f"Address-related error connecting to server: {e}")
+    except socket.error as e:
+        st.error(f"Socket error: {e}")
     except Exception as e:
-        st.write(f"Failed to send telemetry data: {e}")
+        st.error(f"Failed to send telemetry data: {e}")
 
-# Streamlit app
-st.title("Rocket Launch Control System")
+# Sidebar
+st.sidebar.title("Rocket Launch Control")
+st.sidebar.header("Navigation")
 
-# Synthetic Data
-st.header("Synthetic Sensor Data")
-try:
-    df = pd.read_csv('synthetic_sensor_data.csv')
-    st.write(df.head())
-except FileNotFoundError:
-    st.write("Synthetic sensor data file not found.")
+# Navigation buttons
+if 'page' not in st.session_state:
+    st.session_state.page = 'Home'
 
-# Model Training
-st.header("Model Training")
-X, y = load_data()
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-accuracy = train_model(X_train, y_train, X_test, y_test)
-st.write(f"Model accuracy: {accuracy * 100:.2f}%")
+def set_page(page_name):
+    st.session_state.page = page_name
 
-# PID Controller Simulation
-st.header("PID Controller Simulation")
-kp = st.slider("Kp", 0.0, 5.0, 1.0)
-ki = st.slider("Ki", 0.0, 5.0, 0.1)
-kd = st.slider("Kd", 0.0, 5.0, 0.05)
-setpoint = 100
-measurement = 80
-pid = PIDController(kp, ki, kd)
-control_signal = pid.update(setpoint, measurement)
-st.write(f"Control signal: {control_signal}")
+st.sidebar.button("Home", on_click=set_page, args=('Home',), key='home_button')
+st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',), key='data_button')
+st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',), key='training_button')
+st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',), key='pid_button')
+st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',), key='environment_button')
+st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',), key='sequencer_button')
+st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',), key='telemetry_button')
+st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',), key='controller_button')
 
-# Rocket Environment
-st.header("Rocket Environment")
-try:
-    env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
-    valid_date = (2024, 7, 29, 6)  # Example: Adjust to a valid date within the range
-    env.set_date(valid_date)
-    env.set_atmospheric_model(type='Forecast', file='GFS')
+# Display selected page
+if st.session_state.page == "Home":
+    st.title("🚀 Welcome to the Rocket Launch Control System!")
+    
+    # Banner Image
+    st.image("isro _image.png", use_column_width=True)
+    
+    st.write("""
+        ### Latest Rocket Launch Feed
+        Stay updated with the latest rocket launches and events.
+    """)
+    
+    # Placeholder for dynamic content
+    st.subheader("Upcoming Launches")
+    st.write("**Launch Vehicle:** Falcon 9")
+    st.write("**Launch Date:** August 5, 2024")
+    st.write("**Mission:** Starlink 7")
+    st.write("**Launch Site:** Cape Canaveral Space Force Station")
 
-    wind_speed = np.random.uniform(0, 20)  # Random wind speed between 0 and 20 m/s
-    wind_direction = np.random.uniform(0, 360)  # Random wind direction between 0 and 360 degrees
-    st.write(f"Wind speed: {wind_speed:.2f} m/s, Wind direction: {wind_direction:.2f} degrees")
-except ValueError as e:
-    st.write(f"Error: {e}")
-except Exception as e:
-    st.write(f"Error retrieving wind information: {e}")
+    # Adding a horizontal line for better separation
+    st.markdown("---")
 
-# Launch Sequencer
-st.header("Launch Sequencer")
-countdown_time = st.slider("Countdown Time (seconds)", 0, 60, 10)
-if st.button("Start Countdown"):
-    sequencer = LaunchSequencer()
-    sequencer.countdown = countdown_time
-    sequencer.start_countdown()
+    st.subheader("Recent News")
+    st.write("""
+        - **July 28, 2024:** SpaceX successfully launched the Starship prototype.
+        - **July 25, 2024:** NASA's Artemis I mission is in the final stages of preparation.
+        - **July 20, 2024:** Blue Origin announces a new lunar lander design.
+    """)
 
-# Telemetry
-st.header("Send Telemetry Data")
-telemetry_data = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
-if st.button("Send Telemetry"):
-    send_telemetry(telemetry_data) 
+    # Adding a horizontal line for better separation
+    st.markdown("---")
+    
+    # Add a call to action or contact information
+    st.subheader("Contact Us")
+    st.write("""
+        For more information or inquiries, please reach out to us:
+        - **Email:** info@rocketlaunch.com
+        - **Phone:** +1-800-ROCKET
+    """)
 
-# Rocket Controller section
-st.header("Rocket Controller")
-controller = RocketController()
-if st.button("Run Pre-Launch Checks"):
-    controller.run_pre_launch_checks()
-    if controller.pre_launch_checks_done:
-        st.write("Pre-launch checks completed.")
-    else:
-        st.write("Pre-launch checks failed.")
-if st.button("Start Fueling"):
-    controller.start_fueling()
-    if controller.fueling_done:
-        st.write("Fueling completed.")
-    else:
-        st.write("Fueling failed.")
-if st.button("Position Rocket"):
-    controller.position_rocket()
-    if controller.positioning_done:
-        st.write("Rocket positioned.")
-    else:
-        st.write("Rocket positioning failed.")
-if st.button("Launch"):
-    controller.launch()
+if st.session_state.page == "Synthetic Sensor Data":
+    st.header("Synthetic Sensor Data")
+    with st.expander("View Sensor Data"):
+        try:
+            df = pd.read_csv('synthetic_sensor_data.csv')
+            st.dataframe(df.head(), height=300)
+        except FileNotFoundError:
+            st.error("Synthetic sensor data file not found.")
+
+if st.session_state.page == "Model Training":
+    st.header("Model Training")
+    with st.expander("Train Model"):
+        X, y = load_data()
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        accuracy = train_model(X_train, y_train, X_test, y_test)
+        st.metric(label="Model Accuracy", value=f"{accuracy * 100:.2f} %")
+
+if st.session_state.page == "PID Controller Simulation":
+    st.header("PID Controller Simulation")
+    with st.expander("Run Simulation"):
+        kp = st.slider("Kp", 0.0, 5.0, 1.0, format="%.2f")
+        ki = st.slider("Ki", 0.0, 5.0, 0.1, format="%.2f")
+        kd = st.slider("Kd", 0.0, 5.0, 0.05, format="%.2f")
+        setpoint = 100
+        measurement = 80
+        pid = PIDController(kp, ki, kd)
+        control_signal = pid.update(setpoint, measurement)
+        st.write(f"Control signal: {control_signal:.2f}")
+
+if st.session_state.page == "Rocket Environment":
+    st.header("Rocket Environment")
+    with st.expander("Get Environment Data"):
+        try:
+            env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
+            valid_date = (2024, 7, 29, 6)
+            env.set_date(valid_date)
+            env.set_atmospheric_model(type='Forecast', file='GFS')
+
+            wind_speed = np.random.uniform(0, 20)
+            wind_direction = np.random.uniform(0, 360)
+            st.metric(label="Wind Speed (m/s)", value=f"{wind_speed:.2f}")
+            st.metric(label="Wind Direction (degrees)", value=f"{wind_direction:.2f}")
+        except ValueError as e:
+            st.error(f"Error: {e}")
+        except Exception as e:
+            st.error(f"Error retrieving wind information: {e}")
+
+if st.session_state.page == "Launch Sequencer":
+    st.header("Launch Sequencer")
+    with st.expander("Start Countdown"):
+        countdown_time = st.slider("Countdown Time (seconds)", 0, 60, 10)
+        if st.button("Start Countdown"):
+            sequencer = LaunchSequencer()
+            sequencer.countdown = countdown_time
+            sequencer.start_countdown()
+
+if st.session_state.page == "Telemetry":
+    st.header("Send Telemetry Data")
+    with st.expander("Send Data"):
+        telemetry_data = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
+        if st.button("Send Telemetry"):
+            send_telemetry(telemetry_data)
+
+if st.session_state.page == "Rocket Controller":
+    st.header("Rocket Controller")
+    with st.expander("Control Rocket"):
+        controller = RocketController()
+        if st.button("Run Pre-Launch Checks"):
+            controller.run_pre_launch_checks()
+            if controller.pre_launch_checks_done:
+                st.success("Pre-launch checks completed.")
+            else:
+                st.error("Pre-launch checks failed.")
+        if st.button("Start Fueling"):
+            controller.start_fueling()
+            if controller.fueling_done:
+                st.success("Fueling completed.")
+            else:
+                st.error("Fueling failed.")
+        if st.button("Position Rocket"):
+            controller.position_rocket()
+            if controller.positioning_done:
+                st.success("Rocket positioned.")
+            else:
+                st.error("Rocket positioning failed.")
+        if st.button("Launch Trajectory"):  # Renamed button
+            controller.launch_trajectory()
+        if st.button("Launch Simulation"):  # New button
+            controller.launch_simulation()
