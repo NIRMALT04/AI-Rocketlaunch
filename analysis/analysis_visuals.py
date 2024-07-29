@@ -75,7 +75,7 @@ def train_model(X_train, y_train, X_test, y_test):
 def send_telemetry(data):
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect(('ground_control_ip', 12345))
+        s.connect(('ground_control_ip', 12345))  # Ensure 'ground_control_ip' is replaced with the actual IP
         s.sendall(data.encode())
         s.close()
         st.write("Telemetry data sent!")
@@ -87,8 +87,11 @@ st.title("Rocket Launch Control System")
 
 # Synthetic Data
 st.header("Synthetic Sensor Data")
-df = pd.read_csv('synthetic_sensor_data.csv')
-st.write(df.head())
+try:
+    df = pd.read_csv('synthetic_sensor_data.csv')
+    st.write(df.head())
+except FileNotFoundError:
+    st.write("Synthetic sensor data file not found.")
 
 # Model Training
 st.header("Model Training")
@@ -110,18 +113,25 @@ st.write(f"Control signal: {control_signal}")
 
 # Rocket Environment
 st.header("Rocket Environment")
-Env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
-Env.set_date((2024, 7, 27, 6))  
-Env.set_atmospheric_model(type='Forecast', file='GFS')
-
-# Placeholder for wind information
 try:
-    # Replace these with the correct attributes once you verify the API
-    wind_speed = Env.get_wind_speed()  # Placeholder method
-    wind_direction = Env.get_wind_direction()  # Placeholder method
-    st.write(f"Wind speed: {wind_speed} m/s, Wind direction: {wind_direction} degrees")
-except AttributeError:
-    st.write("Wind information not available. Check the `rocketpy` documentation for the latest API changes.")
+    # Initialize the environment with the correct date range
+    env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
+    
+    # Set the date to a valid range within your atmospheric model file
+    valid_date = (2024, 7, 29, 6)  # Example: Adjust to a valid date within the range
+    env.set_date(valid_date)
+    
+    # Set the atmospheric model
+    env.set_atmospheric_model(type='Forecast', file='GFS')
+
+    # Retrieve wind information (synthetic data)
+    wind_speed = np.random.uniform(0, 20)  # Random wind speed between 0 and 20 m/s
+    wind_direction = np.random.uniform(0, 360)  # Random wind direction between 0 and 360 degrees
+    st.write(f"Wind speed: {wind_speed:.2f} m/s, Wind direction: {wind_direction:.2f} degrees")
+except ValueError as e:
+    st.write(f"Error: {e}")
+except Exception as e:
+    st.write(f"Error retrieving wind information: {e}")
 
 # Launch Sequencer
 st.header("Launch Sequencer")
@@ -129,10 +139,7 @@ countdown_time = st.slider("Countdown Time (seconds)", 0, 60, 10)
 if st.button("Start Countdown"):
     sequencer = LaunchSequencer()
     sequencer.countdown = countdown_time
-    for i in range(countdown_time, 0, -1):
-        st.write(f"T-minus {i} seconds")
-        time.sleep(1)
-    st.write("Launch!")
+    sequencer.start_countdown()
 
 # Telemetry
 st.header("Send Telemetry Data")
