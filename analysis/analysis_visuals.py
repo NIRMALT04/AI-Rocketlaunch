@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 import time
 import socket
 from rocketpy import Environment
+import subprocess
+import os
 
 # Define your classes here
 
@@ -42,20 +44,39 @@ class RocketController:
         self.positioning_done = False
 
     def run_pre_launch_checks(self):
+        self._execute_streamlit_file('prelaunch_simulation/prelaunch_simulation_combined.py')
         self.pre_launch_checks_done = True
 
     def start_fueling(self):
+        self._execute_streamlit_file('prefuelling/Prelaunchfueling.py')
         self.fueling_done = True
 
     def position_rocket(self):
+        self._execute_streamlit_file('rocket_positioning/Rocket_positioning.py')
         self.positioning_done = True
 
     def launch(self):
         if self.pre_launch_checks_done and self.fueling_done and self.positioning_done:
+            self._execute_streamlit_file('simulation_dash/Simulation Dashboard.py')
             sequencer = LaunchSequencer()
             sequencer.start_countdown()
         else:
-            st.write("Cannot launch, not all systems are ready")
+            st.write("Cannot launch, not all systems are ready. Please complete all the steps.")
+
+    def _execute_streamlit_file(self, file_name):
+        try:
+            command = ['streamlit', 'run', file_name]
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.returncode == 0:
+                st.write(f"{file_name} executed successfully.")
+                st.write(result.stdout)
+            else:
+                st.write(f"Error executing {file_name}.")
+                st.write(result.stderr)
+        except FileNotFoundError:
+            st.write(f"{file_name} not found.")
+        except Exception as e:
+            st.write(f"Unexpected error: {e}")
 
 # Load and prepare data
 def load_data():
@@ -114,17 +135,11 @@ st.write(f"Control signal: {control_signal}")
 # Rocket Environment
 st.header("Rocket Environment")
 try:
-    # Initialize the environment with the correct date range
     env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
-    
-    # Set the date to a valid range within your atmospheric model file
     valid_date = (2024, 7, 29, 6)  # Example: Adjust to a valid date within the range
     env.set_date(valid_date)
-    
-    # Set the atmospheric model
     env.set_atmospheric_model(type='Forecast', file='GFS')
 
-    # Retrieve wind information (synthetic data)
     wind_speed = np.random.uniform(0, 20)  # Random wind speed between 0 and 20 m/s
     wind_direction = np.random.uniform(0, 360)  # Random wind direction between 0 and 360 degrees
     st.write(f"Wind speed: {wind_speed:.2f} m/s, Wind direction: {wind_direction:.2f} degrees")
@@ -147,17 +162,26 @@ telemetry_data = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
 if st.button("Send Telemetry"):
     send_telemetry(telemetry_data) 
 
-# Rocket Controller
+# Rocket Controller section
 st.header("Rocket Controller")
 controller = RocketController()
 if st.button("Run Pre-Launch Checks"):
     controller.run_pre_launch_checks()
-    st.write("Pre-launch checks completed.")
+    if controller.pre_launch_checks_done:
+        st.write("Pre-launch checks completed.")
+    else:
+        st.write("Pre-launch checks failed.")
 if st.button("Start Fueling"):
     controller.start_fueling()
-    st.write("Fueling completed.")
+    if controller.fueling_done:
+        st.write("Fueling completed.")
+    else:
+        st.write("Fueling failed.")
 if st.button("Position Rocket"):
     controller.position_rocket()
-    st.write("Rocket positioned.")
+    if controller.positioning_done:
+        st.write("Rocket positioned.")
+    else:
+        st.write("Rocket positioning failed.")
 if st.button("Launch"):
     controller.launch()
