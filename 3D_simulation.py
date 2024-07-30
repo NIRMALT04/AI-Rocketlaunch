@@ -114,7 +114,7 @@ if st.session_state.launch:
         'buttons': [{
             'label': 'Launch',
             'method': 'animate',
-            'args': [None, {'frame': {'duration': 100, 'redraw': True}, 'fromcurrent': True}]
+            'args': [None, {'frame': {'duration': 500, 'redraw': True}, 'fromcurrent': True}]
         }]
     }])
     st.plotly_chart(fig)

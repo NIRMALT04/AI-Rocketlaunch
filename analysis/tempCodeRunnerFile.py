@@ -7,7 +7,6 @@ import time
 import socket
 from rocketpy import Environment
 import subprocess
-from rocket_client import RocketClient
 
 # Define your classes here
 
@@ -93,45 +92,27 @@ def train_model(X_train, y_train, X_test, y_test):
     return accuracy
 
 # Send telemetry data
-# def send_telemetry(data):
-#     ground_control_ip = '127.0.0.1'
-#     ground_control_port = 12345
+def send_telemetry(data):
+    ground_control_ip = '127.0.0.1'
+    ground_control_port = 12345
 
-#     try:
-#         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#         s.settimeout(10)
-#         s.connect((ground_control_ip, ground_control_port))
-#         s.sendall(data.encode())
-#         s.close()
-#         st.success("Telemetry data sent!")
-#     except ConnectionRefusedError:
-#         st.error("Connection refused by the target machine. Ensure the service is running and listening on the port.")
-#     except socket.timeout:
-#         st.error("Connection timed out. The target machine may not be responding.")
-#     except socket.gaierror as e:
-#         st.error(f"Address-related error connecting to server: {e}")
-#     except socket.error as e:
-#         st.error(f"Socket error: {e}")
-#     except Exception as e:
-#         st.error(f"Failed to send telemetry data: {e}")import streamlit as st
-
-
-# Initialize RocketClient
-if 'client' not in st.session_state:
-    st.session_state.client = RocketClient()
-
-# Streamlit UI
-st.title("Rocket Telemetry System")
-
-if st.button("Connect to Ground Control"):
-    st.session_state.client.connect()
-
-if st.button("Send Telemetry Data"):
-    st.session_state.client.send_telemetry()
-
-telemetry_input = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
-st.session_state.client.telemetry_data = telemetry_input
-
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(10)
+        s.connect((ground_control_ip, ground_control_port))
+        s.sendall(data.encode())
+        s.close()
+        st.success("Telemetry data sent!")
+    except ConnectionRefusedError:
+        st.error("Connection refused by the target machine. Ensure the service is running and listening on the port.")
+    except socket.timeout:
+        st.error("Connection timed out. The target machine may not be responding.")
+    except socket.gaierror as e:
+        st.error(f"Address-related error connecting to server: {e}")
+    except socket.error as e:
+        st.error(f"Socket error: {e}")
+    except Exception as e:
+        st.error(f"Failed to send telemetry data: {e}")
 
 # Sidebar
 st.sidebar.title("Rocket Launch Control")
@@ -144,14 +125,14 @@ if 'page' not in st.session_state:
 def set_page(page_name):
     st.session_state.page = page_name
 
-st.sidebar.button("Home", on_click=set_page, args=('Home',), key='home_button_1')
-st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',), key='data_button_1')
-st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',), key='training_button_1')
-st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',), key='pid_button_1')
-st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',), key='environment_button_1')
-st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',), key='sequencer_button_1')
-st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',), key='telemetry_button_1')
-st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',), key='controller_button_1')
+st.sidebar.button("Home", on_click=set_page, args=('Home',), key='home_button')
+st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',), key='data_button')
+st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',), key='training_button')
+st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',), key='pid_button')
+st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',), key='environment_button')
+st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',), key='sequencer_button')
+st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',), key='telemetry_button')
+st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',), key='controller_button')
 
 # Display selected page
 if st.session_state.page == "Home":
@@ -238,13 +219,16 @@ if st.session_state.page == "Rocket Environment":
         except ValueError as e:
             st.error(f"Error: {e}")
         except Exception as e:
-            st.error(f"Unexpected error: {e}")
+            st.error(f"Error retrieving wind information: {e}")
 
 if st.session_state.page == "Launch Sequencer":
     st.header("Launch Sequencer")
-    if st.button("Start Countdown"):
-        sequencer = LaunchSequencer()
-        sequencer.start_countdown()
+    with st.expander("Start Countdown"):
+        countdown_time = st.slider("Countdown Time (seconds)", 0, 60, 10)
+        if st.button("Start Countdown"):
+            sequencer = LaunchSequencer()
+            sequencer.countdown = countdown_time
+            sequencer.start_countdown()
 
 if st.session_state.page == "Telemetry":
     st.header("Send Telemetry Data")
@@ -257,13 +241,25 @@ if st.session_state.page == "Rocket Controller":
     st.header("Rocket Controller")
     with st.expander("Control Rocket"):
         controller = RocketController()
-        if st.button("Run Pre-launch Checks"):
+        if st.button("Run Pre-Launch Checks"):
             controller.run_pre_launch_checks()
+            if controller.pre_launch_checks_done:
+                st.success("Pre-launch checks completed.")
+            else:
+                st.error("Pre-launch checks failed.")
         if st.button("Start Fueling"):
             controller.start_fueling()
+            if controller.fueling_done:
+                st.success("Fueling completed.")
+            else:
+                st.error("Fueling failed.")
         if st.button("Position Rocket"):
             controller.position_rocket()
-        if st.button("Launch Trajectory"):
+            if controller.positioning_done:
+                st.success("Rocket positioned.")
+            else:
+                st.error("Rocket positioning failed.")
+        if st.button("Launch Trajectory"):  # Renamed button
             controller.launch_trajectory()
-        if st.button("Launch Simulation"):
+        if st.button("Launch Simulation"):  # New button
             controller.launch_simulation()
