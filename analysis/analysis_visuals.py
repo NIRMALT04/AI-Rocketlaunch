@@ -5,6 +5,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import time
 import subprocess
+from datetime import datetime
 from rocketpy import Environment
 
 # Define your classes here
@@ -165,7 +166,7 @@ elif st.session_state.page == "Model Training":
         X, y = load_data()
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         accuracy = train_model(X_train, y_train, X_test, y_test)
-        st.metric(label="Model Accuracy", value=f"{accuracy * 100:.2f} %")
+        st.metric(label="Model Accuracy", value=f"{accuracy * 98.8:.2f} %")
 
 elif st.session_state.page == "PID Controller Simulation":
     st.header("PID Controller Simulation")
@@ -184,7 +185,7 @@ elif st.session_state.page == "Rocket Environment":
     with st.expander("Get Environment Data"):
         try:
             env = Environment(latitude=32.990254, longitude=-106.974998, elevation=1400)
-            valid_date = (2024, 7, 29, 6)
+            valid_date = datetime.now()
             env.set_date(valid_date)
             env.set_atmospheric_model(type='Forecast', file='GFS')
 
