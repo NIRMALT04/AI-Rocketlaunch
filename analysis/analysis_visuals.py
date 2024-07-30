@@ -4,9 +4,8 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 import time
-import socket
-from rocketpy import Environment
 import subprocess
+from rocketpy import Environment
 
 # Define your classes here
 
@@ -91,29 +90,6 @@ def train_model(X_train, y_train, X_test, y_test):
     accuracy = model.score(X_test, y_test)
     return accuracy
 
-# def send_telemetry(data):
-#     ground_control_ip = '127.0.0.1'
-#     ground_control_port = 12345
-
-#     try:
-#         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#         s.settimeout(10)
-#         s.connect((ground_control_ip, ground_control_port))
-#         s.sendall(data.encode())
-#         s.close()
-#         st.success("Telemetry data sent!")
-#     except ConnectionRefusedError:
-#         st.error("Connection refused by the target machine. Ensure the service is running and listening on the port.")
-#     except socket.timeout:
-#         st.error("Connection timed out. The target machine may not be responding.")
-#     except socket.gaierror as e:
-#         st.error(f"Address-related error connecting to server: {e}")
-#     except socket.error as e:
-#         st.error(f"Socket error: {e}")
-#     except Exception as e:
-#         st.error(f"Failed to send telemetry data: {e}")
-
-    #     st.error(f"Failed to send telemetry data: {e}")
 # Sidebar
 st.sidebar.title("Rocket Launch Control")
 st.sidebar.header("Navigation")
@@ -125,18 +101,18 @@ if 'page' not in st.session_state:
 def set_page(page_name):
     st.session_state.page = page_name
 
-st.sidebar.button("Home", on_click=set_page, args=('Home',), key='home_button_1')
-st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',), key='data_button_1')
-st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',), key='training_button_1')
-st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',), key='pid_button_1')
-st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',), key='environment_button_1')
-st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',), key='sequencer_button_1')
-# st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',), key='telemetry_button_1')
-st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',), key='controller_button_1')
+st.sidebar.button("Home", on_click=set_page, args=('Home',))
+st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',))
+st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',))
+st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',))
+st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',))
+st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',))
+st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',))
+st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',))
 
 # Display selected page
 if st.session_state.page == "Home":
-    st.title("🚀 Welcome to the Rocket Launch Control System!")
+    st.title("Welcome to the Rocket Launch Control System")
     
     # Banner Image
     st.image("isro _image.png", use_column_width=True)
@@ -148,21 +124,21 @@ if st.session_state.page == "Home":
     
     # Placeholder for dynamic content
     st.subheader("Upcoming Launches")
-    st.write("**Launch Vehicle:** Falcon 9")
-    st.write("**Launch Date:** August 5, 2024")
-    st.write("**Mission:** Starlink 7")
-    st.write("**Launch Site:** Cape Canaveral Space Force Station")
+    st.write("**Launch Vehicle:** HLVM3")
+    st.write("**Launch Date:** 2025")
+    st.write("**Mission:** Gaganyaan-Human rated LVM3 - HLVM3")
+    st.write("**Launch Site:** ISRO INDIA")
 
     # Adding a horizontal line for better separation
     st.markdown("---")
+    st.image("gangaayaan.png", use_column_width=True)
 
     st.subheader("Recent News")
     st.write("""
-        - **July 28, 2024:** SpaceX successfully launched the Starship prototype.
-        - **July 25, 2024:** NASA's Artemis I mission is in the final stages of preparation.
-        - **July 20, 2024:** Blue Origin announces a new lunar lander design.
-    """)
-
+        - **2025:** Gaganyaan-Human rated LVM3 - HLVM3
+        - **2024:** PSLV-C57/Aditya-L1 Mission
+        - **2025:** NASA-ISRO SAR (NISAR) Satellite
+             """)
     # Adding a horizontal line for better separation
     st.markdown("---")
     
@@ -174,7 +150,7 @@ if st.session_state.page == "Home":
         - **Phone:** +1-800-ROCKET
     """)
 
-if st.session_state.page == "Synthetic Sensor Data":
+elif st.session_state.page == "Synthetic Sensor Data":
     st.header("Synthetic Sensor Data")
     with st.expander("View Sensor Data"):
         try:
@@ -183,7 +159,7 @@ if st.session_state.page == "Synthetic Sensor Data":
         except FileNotFoundError:
             st.error("Synthetic sensor data file not found.")
 
-if st.session_state.page == "Model Training":
+elif st.session_state.page == "Model Training":
     st.header("Model Training")
     with st.expander("Train Model"):
         X, y = load_data()
@@ -191,7 +167,7 @@ if st.session_state.page == "Model Training":
         accuracy = train_model(X_train, y_train, X_test, y_test)
         st.metric(label="Model Accuracy", value=f"{accuracy * 100:.2f} %")
 
-if st.session_state.page == "PID Controller Simulation":
+elif st.session_state.page == "PID Controller Simulation":
     st.header("PID Controller Simulation")
     with st.expander("Run Simulation"):
         kp = st.slider("Kp", 0.0, 5.0, 1.0, format="%.2f")
@@ -203,7 +179,7 @@ if st.session_state.page == "PID Controller Simulation":
         control_signal = pid.update(setpoint, measurement)
         st.write(f"Control signal: {control_signal:.2f}")
 
-if st.session_state.page == "Rocket Environment":
+elif st.session_state.page == "Rocket Environment":
     st.header("Rocket Environment")
     with st.expander("Get Environment Data"):
         try:
@@ -221,20 +197,17 @@ if st.session_state.page == "Rocket Environment":
         except Exception as e:
             st.error(f"Unexpected error: {e}")
 
-if st.session_state.page == "Launch Sequencer":
+elif st.session_state.page == "Launch Sequencer":
     st.header("Launch Sequencer")
     if st.button("Start Countdown"):
         sequencer = LaunchSequencer()
         sequencer.start_countdown()
 
-# if st.session_state.page == "Telemetry":
-#     st.header("Send Telemetry Data")
-#     with st.expander("Send Data"):
-#         telemetry_data = st.text_input("Telemetry Data", "altitude=1000;speed=5400")
-#         if st.button("Send Telemetry"):
-#             send_telemetry(telemetry_data)
+elif st.session_state.page == "Telemetry":
+    st.write("You will be redirected to the Telemetry page.")
+    st.write("[Click here to go to the Telemetry page](http://localhost:8502)")
 
-if st.session_state.page == "Rocket Controller":
+elif st.session_state.page == "Rocket Controller":
     st.header("Rocket Controller")
     with st.expander("Control Rocket"):
         controller = RocketController()
