@@ -25,17 +25,6 @@ class PIDController:
         self.previous_error = error
         return self.kp * error + self.ki * self.integral + self.kd * derivative
 
-class LaunchSequencer:
-    def __init__(self):
-        self.countdown = 10
-
-    def start_countdown(self):
-        while self.countdown > 0:
-            st.write(f"T-minus {self.countdown} seconds")
-            time.sleep(1)
-            self.countdown -= 1
-        st.success("Launch!")
-
 class RocketController:
     def __init__(self):
         self.pre_launch_checks_done = False
@@ -56,8 +45,6 @@ class RocketController:
 
     def launch_trajectory(self):
         self._execute_streamlit_file('simulation_dash/Simulation Dashboard.py')
-        sequencer = LaunchSequencer()
-        sequencer.start_countdown()
 
     def launch_simulation(self):
         self._execute_streamlit_file('3D_simulation.py')  # Adjust file name as needed
@@ -77,9 +64,28 @@ class RocketController:
         except Exception as e:
             st.write(f"Unexpected error: {e}")
 
+# Function to generate synthetic process data
+def generate_synthetic_data(pid, setpoint, num_points):
+    measurements = []
+    control_signals = []
+    measurement = np.random.normal(setpoint, 2)  # Initial measurement
+
+    for _ in range(num_points):
+        control_signal = pid.update(setpoint, measurement)
+        measurement += control_signal + np.random.normal(0, 0.5)  # Simulate process response with noise
+        measurements.append(measurement)
+        control_signals.append(control_signal)
+
+    return measurements, control_signals
+
 # Load and prepare data
 def load_data():
-    data = pd.read_csv('synthetic_sensor_data.csv')
+    data = pd.DataFrame({
+        'feature1': np.random.rand(100),
+        'feature2': np.random.rand(100),
+        'feature3': np.random.rand(100),
+        'failure': np.random.choice([0, 1], size=100)
+    })
     X = data.drop('failure', axis=1)
     y = data['failure']
     return X, y
@@ -103,11 +109,10 @@ def set_page(page_name):
     st.session_state.page = page_name
 
 st.sidebar.button("Home", on_click=set_page, args=('Home',))
-st.sidebar.button("Synthetic Sensor Data", on_click=set_page, args=('Synthetic Sensor Data',))
-st.sidebar.button("Model Training", on_click=set_page, args=('Model Training',))
+st.sidebar.button("Synthetic Sensor Data & Model Training", on_click=set_page, args=('Synthetic Sensor Data & Model Training',))
 st.sidebar.button("PID Controller Simulation", on_click=set_page, args=('PID Controller Simulation',))
 st.sidebar.button("Rocket Environment", on_click=set_page, args=('Rocket Environment',))
-st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',))
+# st.sidebar.button("Launch Sequencer", on_click=set_page, args=('Launch Sequencer',))
 st.sidebar.button("Telemetry", on_click=set_page, args=('Telemetry',))
 st.sidebar.button("Rocket Controller", on_click=set_page, args=('Rocket Controller',))
 
@@ -125,10 +130,10 @@ if st.session_state.page == "Home":
     
     # Placeholder for dynamic content
     st.subheader("Upcoming Launches")
-    st.write("**Launch Vehicle:** HLVM3")
-    st.write("**Launch Date:** 2025")
-    st.write("**Mission:** Gaganyaan-Human rated LVM3 - HLVM3")
-    st.write("**Launch Site:** ISRO INDIA")
+    st.write("Launch Vehicle: HLVM3")
+    st.write("Launch Date: 2025")
+    st.write("Mission: Gaganyaan-Human rated LVM3 - HLVM3")
+    st.write("Launch Site: ISRO INDIA")
 
     # Adding a horizontal line for better separation
     st.markdown("---")
@@ -136,10 +141,10 @@ if st.session_state.page == "Home":
 
     st.subheader("Recent News")
     st.write("""
-        - **2025:** Gaganyaan-Human rated LVM3 - HLVM3
-        - **2024:** PSLV-C57/Aditya-L1 Mission
-        - **2025:** NASA-ISRO SAR (NISAR) Satellite
-             """)
+        - 2025: Gaganyaan-Human rated LVM3 - HLVM3
+        - 2024: PSLV-C57/Aditya-L1 Mission
+        - 2025: NASA-ISRO SAR (NISAR) Satellite
+    """)
     # Adding a horizontal line for better separation
     st.markdown("---")
     
@@ -147,26 +152,27 @@ if st.session_state.page == "Home":
     st.subheader("Contact Us")
     st.write("""
         For more information or inquiries, please reach out to us:
-        - **Email:** info@rocketlaunch.com
-        - **Phone:** +1-800-ROCKET
+        - Email: info@rocketlaunch.com
+        - Phone: +1-800-ROCKET
     """)
 
-elif st.session_state.page == "Synthetic Sensor Data":
-    st.header("Synthetic Sensor Data")
-    with st.expander("View Sensor Data"):
-        try:
-            df = pd.read_csv('synthetic_sensor_data.csv')
-            st.dataframe(df.head(), height=300)
-        except FileNotFoundError:
-            st.error("Synthetic sensor data file not found.")
+elif st.session_state.page == "Synthetic Sensor Data & Model Training":
+    st.header("Synthetic Sensor Data & Model Training")
 
-elif st.session_state.page == "Model Training":
-    st.header("Model Training")
+    with st.expander("View Sensor Data"):
+        df = pd.DataFrame({
+            'feature1': np.random.rand(100),
+            'feature2': np.random.rand(100),
+            'feature3': np.random.rand(100),
+            'failure': np.random.choice([0, 1], size=100)
+        })
+        st.dataframe(df.head(), height=300)
+        
     with st.expander("Train Model"):
         X, y = load_data()
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         accuracy = train_model(X_train, y_train, X_test, y_test)
-        st.metric(label="Model Accuracy", value=f"{accuracy * 98.8:.2f} %")
+        st.metric(label="Model Accuracy", value=f"{accuracy * 100:.2f} %")
 
 elif st.session_state.page == "PID Controller Simulation":
     st.header("PID Controller Simulation")
@@ -174,11 +180,20 @@ elif st.session_state.page == "PID Controller Simulation":
         kp = st.slider("Kp", 0.0, 5.0, 1.0, format="%.2f")
         ki = st.slider("Ki", 0.0, 5.0, 0.1, format="%.2f")
         kd = st.slider("Kd", 0.0, 5.0, 0.05, format="%.2f")
-        setpoint = 100
-        measurement = 80
+        setpoint = st.number_input("Setpoint", value=100)
+        num_points = st.number_input("Number of data points", value=50)
+        
         pid = PIDController(kp, ki, kd)
-        control_signal = pid.update(setpoint, measurement)
-        st.write(f"Control signal: {control_signal:.2f}")
+        measurements, control_signals = generate_synthetic_data(pid, setpoint, num_points)
+        
+        st.write("Synthetic Data Generated:")
+        df = pd.DataFrame({
+            "Measurement": measurements,
+            "Control Signal": control_signals
+        })
+        st.line_chart(df)
+
+        st.write("Control signal at the last step:", control_signals[-1])
 
 elif st.session_state.page == "Rocket Environment":
     st.header("Rocket Environment")
@@ -198,15 +213,15 @@ elif st.session_state.page == "Rocket Environment":
         except Exception as e:
             st.error(f"Unexpected error: {e}")
 
-elif st.session_state.page == "Launch Sequencer":
-    st.header("Launch Sequencer")
-    if st.button("Start Countdown"):
-        sequencer = LaunchSequencer()
-        sequencer.start_countdown()
-
 elif st.session_state.page == "Telemetry":
     st.write("You will be redirected to the Telemetry page.")
-    st.write("[Click here to go to the Telemetry page](http://localhost:8502)")
+    # Execute the telemetry.py file
+    try:
+        command = ['streamlit', 'run', 'C:\\Users\\pavan\\OneDrive\\Desktop\\AI-Rocketlaunch\\analysis\\telemetry.py']
+        result = subprocess.Popen(command)
+        st.write("Telemetry page is now running.")
+    except Exception as e:
+        st.error(f"An error occurred while trying to run telemetry.py: {e}")
 
 elif st.session_state.page == "Rocket Controller":
     st.header("Rocket Controller")
